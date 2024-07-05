@@ -18,8 +18,8 @@ def min_ps {P:T->Prop} : iscontr T -> (∀ i , P i) = (∃ i , P i) := by
   exact Eq.propIntro to from_
 
 def cntr_funsp : iscontr T -> iscontr (T -> T) := by
-  intro cp
-  let (.mksprop cc cp) := cp
+  intro cpf
+  let (.mksprop cc cp) := cpf
   unfold iscontr
   exact (.mksprop id fun f => by
     funext k
@@ -64,23 +64,46 @@ def glue_p_contr : iscontr (glued_p a b) := .mksprop glue_p_cc fun (.mksprop bcc
   . unfold glued_equiv; cases p
     . rfl
 
-
-def no_conf {f h:A->A}{a b:A}: (∀ a, a = h (f a)) -> a = h (f b) -> a = b := by
-  intro p k
-  let eq := p b
-  rw [<-eq] at k
-  exact k
-
-
 def idmap : (∀ a , f a = a) -> f = id := by
   intro p
   funext k
   rw [p k]
   simp
 
-def act_id {f h : A->A} : (∀ a , a = h (f a)) -> (fun i => h (f i)) = id := by
-  intro p
-  funext i
-  let k := p i
-  rw [<- k]
+def act_id {f h : A->A} : (∀ a , h (f a) = a) -> ∀ i , h (f i) = id i := by
+  intro p i
+  rw [p i]
   simp
+
+def no_conf {f h:A->A}{a b:A}: (∀ a, h (f a) = a) -> a = h (f b) -> a = b := by
+  intro p k
+  let eq1 := act_id p b
+  rw [eq1] at k
+  exact k
+
+
+def fiber : (A -> B) -> B -> Type _ := fun f b => sigmaprop A fun a => f a = b
+def isweq {A:Type _}{B:Type _}: (A -> B) -> Type _ := fun f => ∀ b , iscontr (fiber f b)
+def weq : Type _ -> Type _ -> Type _ := fun A B => @Sigma (A -> B) fun f => isweq f
+
+def weqquor : (w:weq A B) -> quor w.fst := by
+  intro (.mk f p)
+  unfold isweq at p
+  simp
+  unfold quor
+  intro b
+  exact (p b).fst
+
+def bool_nat : wmap Bool Nat := by
+  refine .mk ?_ ?_
+  intro i
+  cases i
+  . exact 0
+  . exact 1
+  refine .mksprop ?_ ?_
+  intro i
+  cases i
+  . exact false
+  . exact true
+  intro b
+  cases b <;> rfl
