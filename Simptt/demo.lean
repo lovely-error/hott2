@@ -2,6 +2,7 @@
 import Simptt.core
 import Simptt.others
 
+
 def not_wmap: wmap Bool Bool :=
   ~(not, (.mksprop not (by intro i; cases i <;> rfl)))
 
@@ -37,14 +38,13 @@ def int_list : wmap Nat (List Unit) := by
        exact (.mksprop list2nat nl_coh)
   )
 
-
+-- another, rather trivial, example
 example : (a > 0) -> (a + 1 > 0) := by
   let (.mksprop k p) := p1 int_list a
   rw [<-p]
   cases k
   . case nil => intro; contradiction
   . case cons a b => simp;
-
 
 
 def ln_coh : (a : List Unit) -> a = nat2list (list2nat a) := by
@@ -54,37 +54,15 @@ def ln_coh : (a : List Unit) -> a = nat2list (list2nat a) := by
   | .nil => unfold list2nat nat2list; simp;
 
 
+def list_int : wmap (List Unit) Nat := ~(list2nat,(.mksprop nat2list ln_coh))
 
-def list_int : wmap (List Unit) Nat := by
-  unfold wmap
-  exact ~(
-    list2nat,
-    (.mksprop nat2list ln_coh)
-  )
 
 def fmap_append_plus :
-    (nat2list a1).append (nat2list a2) = nat2list (a1 + a2)
+    List.append (nat2list a1) (nat2list a2) = nat2list (a1 + a2)
 := by
   cases a1
   {
-    cases a2
-    {
-      unfold nat2list
-      simp
-    }
-    {
-      case _ n =>
-        cases n
-        {
-          unfold nat2list
-          simp
-        }
-        {
-          case _ n =>
-            unfold nat2list at *
-            simp
-        }
-    }
+    cases a2 <;> unfold nat2list <;> simp
   }
   {
     cases a2
@@ -116,6 +94,5 @@ example : List.append (a:List Unit) (b:List Unit) = List.append b a := by
   let (.mksprop a1 r1) := p1 list_int a
   let (.mksprop a2 r2) := p1 list_int b
   rw [<-r1, <-r2]
-  rw [fmap_append_plus]
-  rw [fmap_append_plus]
+  rw [fmap_append_plus, fmap_append_plus]
   rw [Nat.add_comm]
