@@ -104,13 +104,9 @@ def fmap_append_plus :
         }
         {
           case _ n ih =>
-            rw [Nat.add_right_comm]
             simp [nat2list]
             rw [ih]
             rw [Nat.add_right_comm _ 1 b]
-            simp only [nat2list]
-            rw [Nat.add_right_comm _ 1 b]
-            simp only [nat2list]
         }
     }
   }
