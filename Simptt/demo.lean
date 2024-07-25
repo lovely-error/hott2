@@ -90,9 +90,22 @@ def fmap_append_plus :
   }
 
 -- juggle around a funtor technique
-example : List.append (a:List Unit) (b:List Unit) = List.append b a := by
+example : List.append (a:List Unit) b = List.append b a := by
   let (.mksprop a1 r1) := p1 list_int a
   let (.mksprop a2 r2) := p1 list_int b
   rw [<-r1, <-r2]
   rw [fmap_append_plus, fmap_append_plus]
   rw [Nat.add_comm]
+
+
+
+def rearg : iso (A->A->A) (Prod A A -> A) := by
+  refine mkiso ?_ ?_ ?_ ?_
+  exact fun f (a, b) => f a b
+  exact fun f a b => f (a,b)
+  simp
+  simp
+
+
+
+#eval Nat.log2 3

@@ -1,6 +1,7 @@
 
 import Simptt.core
 
+
 def iscontr : Type _ -> Type _ := fun T => sigmaprop T (fun cc => (i:T) -> i = cc)
 
 def min_ps {P:T->Prop} : iscontr T -> (∀ i , P i) = (∃ i , P i) := by
@@ -29,7 +30,7 @@ def cntr_funsp : iscontr T -> iscontr (T -> T) := by
     rw [cp v]
   )
 
-def no_autos : iscontr T -> {f : T -> T} -> f = id := by
+def no_autos : iscontr T -> ∀ f:T->T , f = id := by
   intros cp f
   let (.mksprop cc cf) := cp
   let ex : ∃ (f : T -> T) , f cc = cc := ~(id , by simp)
@@ -40,6 +41,7 @@ def no_autos : iscontr T -> {f : T -> T} -> f = id := by
     rw [min_ps (cntr_funsp cp)]
     exact ex
   exact (ac _)
+
 
 inductive path : {A :Type _} -> {B:Type _} -> A -> B -> Type _
 | refl : {k:A} -> path k k
@@ -75,6 +77,11 @@ def act_id {f h : A->A} : (∀ a , h (f a) = a) -> ∀ i , h (f i) = id i := by
   rw [p i]
   simp
 
+def act_id2 {f h : A->A} : (∀ a , a = h (f a)) -> ∀ i , h (f i) = id i := by
+  intro p i
+  rw [<- p i]
+  simp
+
 def no_conf {f h:A->A}{a b:A}: (∀ a, h (f a) = a) -> a = h (f b) -> a = b := by
   intro p k
   let eq1 := act_id p b
@@ -82,8 +89,8 @@ def no_conf {f h:A->A}{a b:A}: (∀ a, h (f a) = a) -> a = h (f b) -> a = b := b
   exact k
 
 
-def fiber : (A -> B) -> B -> Type _ := fun f b => sigmaprop A fun a => f a = b
-def isweq {A:Type _}{B:Type _}: (A -> B) -> Type _ := fun f => ∀ b , iscontr (fiber f b)
+def fiber : (A -> B) -> B -> Type _ := fun f m => sigmaprop A fun i => f i = m
+def isweq {A:Type _}{B:Type _}: (A -> B) -> Type _ := fun f => ∀ i , iscontr (fiber f i)
 def weq : Type _ -> Type _ -> Type _ := fun A B => @Sigma (A -> B) fun f => isweq f
 
 def weqquor : (w:weq A B) -> quor w.fst := by
@@ -94,16 +101,46 @@ def weqquor : (w:weq A B) -> quor w.fst := by
   intro b
   exact (p b).fst
 
-def bool_nat : wmap Bool Nat := by
-  refine .mk ?_ ?_
-  intro i
-  cases i
-  . exact 0
-  . exact 1
+
+
+def idwmap {T:Type _} : wmap T T := .mk id (.mksprop id fun i => @rfl _ i)
+
+def contrsp_contr_maps : iscontr T -> iscontr (wmap T T) := by
+  intro k
+  unfold iscontr
   refine .mksprop ?_ ?_
+  exact idwmap
+  intro ~(f, (.mksprop h p))
+  let rr1 := no_autos k f
+  subst rr1
+  let rr2 := no_autos k h
+  subst rr2
+  unfold idwmap
+  rfl
+
+
+
+
+
+def iso_triangle : iso A B -> iso C B -> iso A C := by
+  intro m1 m2
+  let (.mksprop (.mk f1 (.mksprop h1 k1)) p1) := m1
+  let (.mksprop (.mk f2 (.mksprop h2 k2)) p2) := m2
+  unfold iscoh_iso at p1 p2
+  simp at p1 p2
+  unfold iso
+  refine .mksprop ?_ ?_
+  {
+    unfold wmap
+    refine mkwmap ?_ ?_ ?_
+    intro a
+    exact h2 (f1 a)
+    intro c
+    exact h1 (f2 c)
+    intro a
+    rw [<- p2, <- k1]
+  }
+  unfold iscoh_iso mkwmap
+  simp
   intro i
-  cases i
-  . exact false
-  . exact true
-  intro b
-  cases b <;> rfl
+  rw [<- p1, <- k2]
